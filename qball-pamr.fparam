@@ -1,0 +1,49 @@
+########################################################################
+# FIXED PARAMETER FILE
+
+app_name := ["Global Q-ball dynamics"]
+
+# the number of time levels in the AMR hierarchy
+num_evo_tl := 2
+
+# time level considered t=t0 for initial data generation
+ic_n := 2
+
+# initial time
+t0 := 0
+
+# define "work" variables (i.e. variables that are only defined in the
+# AMR hierarchy at one time level, e.g. for computing residuals)
+num_AMRH_work_vars := 4 
+AMRH_work_vars := [ "phi1_res" "phi2_res" "pi1_res" "pi2_res" ]
+
+# which variables have evolution equations?
+num_hyperbolic_vars := 6
+hyperbolic_vars := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ]
+
+# variables to inject from a fine level to the coarser level at synchronization times
+num_amr_inject   := 6
+amr_inject       := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ]
+
+# variables that need to have their ghost regions synchronized after each iteration
+num_amr_sync     := 6
+amr_sync         := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ]
+
+# variables that need to be interpolated on their AMR boundaries via a 4th-order
+# spatial interpolation and 2nd-order time interpolation of the parent grid
+num_amr_interp4  := 6
+amr_interp4      := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ] 
+
+# variables that will be initialized on a new patch of fine level after
+# a regrid by fourth-order polynomial interpolation from the parent grid
+num_amr_transfer4:= 6
+amr_transfer4    := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ]
+
+# variables to smooth via Kreiss-Oliger diss. after regridding
+num_rg_diss_vars := 6
+rg_diss_vars     := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ]
+
+# variables to smooth via Kreiss-Oliger dissipation before taking a time step
+num_tn_diss_vars := 6
+tn_diss_vars := [ "phi1" "phi2" "pi1" "pi2" "modphi" "qdensity" ] 
+

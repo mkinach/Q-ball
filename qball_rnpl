@@ -1,0 +1,150 @@
+#########################################################################
+# System parameters 
+#########################################################################
+
+system parameter int memsiz := 200000000
+
+### Note: these values are defined here, but are redefined in id0, id1, ...
+
+# Grid size 
+parameter float xmin     := 0
+parameter float xmax     := 64
+parameter float ymin     := 0
+parameter float ymax     := 64
+
+# Initial q-ball position (single q-ball)
+parameter float cx       := 32.0  // initial x-position
+parameter float cy       := 32.0  // initial y-position
+parameter float sx       := 0.8   // width in x-direction (Gaussian initial data)
+parameter float sy       := 0.8   // width in y-direction (Gaussian initial data)
+
+# Initial q-ball position (two q-balls)
+parameter float cx1      := 15.0  // initial x-position
+parameter float cy1      := 25.0  // initial y-position
+parameter float cx2      := 35.0  // initial x-position
+parameter float cy2      := 25.0  // initial y-position
+
+# Boundary parameters for parallel code. If 1, then the boundary is a 
+# physical boundary of the problem (instead of an interior AMR or processor boundary)
+parameter int xmin_pb := 1
+parameter int xmax_pb := 1
+parameter int ymin_pb := 1
+parameter int ymax_pb := 1
+
+
+#########################################################################
+# Q-ball model parameters
+#########################################################################
+
+# Potential parameters. Note that in the equations of motion defined
+# below, A is implicitly assumed to be 1
+parameter float B       := 0.5   // also defined in init_qball.inc
+
+
+#########################################################################
+# Coordinate grids
+#########################################################################
+
+rec coordinates t,x,y
+
+uniform rec grid g1 [1:Nx][1:Ny] {xmin:xmax}{ymin:ymax}
+
+# Defined at 0,1 since we use a Crank-Nicholson method
+float modphi   on g1 at 0,1 {out_gf = 1}
+float qdensity on g1 at 0,1 {out_gf = 1}
+float phi1     on g1 at 0,1 {out_gf = 1}
+float phi2     on g1 at 0,1 {out_gf = 1}
+float pi1      on g1 at 0,1 {out_gf = 1}
+float pi2      on g1 at 0,1 {out_gf = 1}
+
+#
+#########################################################################
+# Operator definitions
+#########################################################################
+
+# O(h^2) FORWARDS 1st SPATIAL DERIVATIVE
+operator DF(f,x) := (-3*<0>f[0][0] + 4*<0>f[1][0] - <0>f[2][0]) / (2*dx)
+operator DF(f,y) := (-3*<0>f[0][0] + 4*<0>f[0][1] - <0>f[0][2]) / (2*dy)
+# O(h^2) BACKWARDS 1st SPATIAL DERIVATIVE
+operator DB(f,x) := (3*<0>f[0][0] - 4*<0>f[-1][0] + <0>f[-2][0]) / (2*dx)
+operator DB(f,y) := (3*<0>f[0][0] - 4*<0>f[0][-1] + <0>f[0][-2]) / (2*dy)
+
+# FUTURE TIME LEVEL OPERATOR
+operator FTL(f,t) := <1>f[0][0]
+
+# CRANK-NICHOLSON FORWARD TIME AVERAGE
+operator MU(f,t) := (<1>f[0][0] + <0>f[0][0]) / 2
+# O(h^2) CRANK-NICHOLSON 1st TIME DERIVATIVE 
+operator DCN(f,t) := (<1>f[0][0] - <0>f[0][0]) / dt
+# O(h^2) CRANK-NICHOLSON 2nd SPATIAL DERIVATIVE
+operator DCN2(f,x) := 0.5*((<1>f[1][0]-2*<1>f[0][0]+<1>f[-1][0])+(<0>f[1][0]-2*<0>f[0][0]+<0>f[-1][0]))/(dx^2)
+operator DCN2(f,y) := 0.5*((<1>f[0][1]-2*<1>f[0][0]+<1>f[0][-1])+(<0>f[0][1]-2*<0>f[0][0]+<0>f[0][-1]))/(dy^2)
+
+
+#########################################################################
+# Equations of Motion
+#########################################################################
+
+residual modphi {
+      [1:Nx][1:Ny] := FTL(modphi,t) - sqrt((FTL(phi1,t))^2 + (FTL(phi2,t))^2);
+                          }
+
+residual qdensity {
+      [1:Nx][1:Ny] := FTL(qdensity,t) - ((FTL(phi1,t))*FTL(pi2,t) - FTL(phi2,t)*FTL(pi1,t));
+                          }
+
+evaluate residual phi1 { 
+          [1:Nx][1:1] := if ( ymin_pb == 1 ) then DCN(phi1,t) - MU(DF(phi1,y),t) = 0; // outgoing BCs
+        [1:Nx][Ny:Ny] := if ( ymax_pb == 1 ) then DCN(phi1,t) + MU(DB(phi1,y),t) = 0; 
+          [1:1][1:Ny] := if ( xmin_pb == 1 ) then DCN(phi1,t) - MU(DF(phi1,x),t) = 0;
+        [Nx:Nx][1:Ny] := if ( xmax_pb == 1 ) then DCN(phi1,t) + MU(DB(phi1,x),t) = 0;
+     [2:Nx-1][2:Ny-1] := DCN(phi1,t) - MU(pi1,t); 
+                       }
+
+evaluate residual phi2 { 
+          [1:Nx][1:1] := if ( ymin_pb == 1 ) then DCN(phi2,t) - MU(DF(phi2,y),t) = 0; // outgoing BCs
+        [1:Nx][Ny:Ny] := if ( ymax_pb == 1 ) then DCN(phi2,t) + MU(DB(phi2,y),t) = 0; 
+          [1:1][1:Ny] := if ( xmin_pb == 1 ) then DCN(phi2,t) - MU(DF(phi2,x),t) = 0;
+        [Nx:Nx][1:Ny] := if ( xmax_pb == 1 ) then DCN(phi2,t) + MU(DB(phi2,x),t) = 0;
+     [2:Nx-1][2:Ny-1] := DCN(phi2,t) - MU(pi2,t);
+                       }
+
+evaluate residual pi1 { 
+          [1:Nx][1:1] := if ( ymin_pb == 1 ) then DCN(pi1,t) - MU(DF(pi1,y),t) = 0; // outgoing BCs
+        [1:Nx][Ny:Ny] := if ( ymax_pb == 1 ) then DCN(pi1,t) + MU(DB(pi1,y),t) = 0; 
+          [1:1][1:Ny] := if ( xmin_pb == 1 ) then DCN(pi1,t) - MU(DF(pi1,x),t) = 0;
+        [Nx:Nx][1:Ny] := if ( xmax_pb == 1 ) then DCN(pi1,t) + MU(DB(pi1,x),t) = 0;
+     [2:Nx-1][2:Ny-1] := DCN(pi1,t) - DCN2(phi1,x) - DCN2(phi1,y) + MU(phi1 - modphi*phi1 + B*phi1*modphi^2,t);
+                      }
+
+evaluate residual pi2 { 
+          [1:Nx][1:1] := if ( ymin_pb == 1 ) then DCN(pi2,t) - MU(DF(pi2,y),t) = 0; // outgoing BCs
+        [1:Nx][Ny:Ny] := if ( ymax_pb == 1 ) then DCN(pi2,t) + MU(DB(pi2,y),t) = 0; 
+          [1:1][1:Ny] := if ( xmin_pb == 1 ) then DCN(pi2,t) - MU(DF(pi2,x),t) = 0;
+        [Nx:Nx][1:Ny] := if ( xmax_pb == 1 ) then DCN(pi2,t) + MU(DB(pi2,x),t) = 0;
+     [2:Nx-1][2:Ny-1] := DCN(pi2,t) - DCN2(phi2,x) - DCN2(phi2,y) + MU(phi2 - modphi*phi2 + B*phi2*modphi^2,t);
+                      }
+
+#########################################################################
+# Initializations
+#########################################################################
+
+# RNPL-generated initializations
+initialize modphi   { [1:Nx][1:Ny]:= sqrt(phi1^2 + phi2^2) } 
+initialize qdensity { [1:Nx][1:Ny]:= phi1*pi2 - phi2*pi1 } 
+
+# Manual initializations
+init_qball.inc init_qball initialize phi1, phi2, pi1, pi2
+  HEADER
+      phi1, phi2, pi1, pi2, x, y, dx, xmax, xmin, ymax, ymin,
+      cx, cy, cx1, cy1, cx2, cy2
+
+auto initialize modphi, qdensity
+
+#########################################################################
+# Updates
+#########################################################################
+
+looper iterative
+
+auto update phi1, pi1, phi2, pi2, modphi, qdensity
