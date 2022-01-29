@@ -1,26 +1,25 @@
-c============================================================
-c     Code to manually initialize some grid functions. Note
-c     that RNPL supplies the routine header, declaration of
-c     some routine arguments, and RETURN and END statements.
-c============================================================
+c=======================================================================
+c     Code to manually initialize some grid functions. Note that RNPL
+c     supplies the routine header, declaration of some routine
+c     arguments, and RETURN and END statements.
+c=======================================================================
 
       integer     Nx, Ny      ! a more convenient spacing variable
       integer     i, j
       integer     ini_type
-      integer     whichqball  ! for telling apart multiple q-balls
+      integer     whichqball  ! for telling apart multiple Q-balls
 
-c------------------------------------------------------------
-c     Some declarations for LSODA. Basically, a port of
-c     shape.f with some minor changes.
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
+c     Some declarations for LSODA
+c-----------------------------------------------------------------------
       
       integer        iargc
       real*8         r8arg
       real*8         rmax,       tol
       external       fcn,        jac 
       integer        neq 
-      parameter    ( neq = 2 ) ! the equations are in fcn.f
-      real*8         ysol(neq) ! changed from y --> ysol
+      parameter    ( neq = 2 )         ! the equations are in fcn.f
+      real*8         ysol(neq)
       real*8         r,          rout  ! axis variables
       integer        itol
       real*8         rtol,       atol
@@ -34,9 +33,9 @@ c------------------------------------------------------------
       integer        jt  
       include       'fcn.inc'
 
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
 c     Some declarations for the interpolation & boost
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
 
       real*8, allocatable :: phi_shape(:)      ! stores interpolated phi 
       real*8, allocatable :: phi_shape_log(:)  ! stores linearized log of phi for exp tail fit 
@@ -45,7 +44,7 @@ c------------------------------------------------------------
       real*8, allocatable :: phi_cntrct(:,:)   ! stores Lorentz contracted phi_shape
       real*8, allocatable :: d_phi_cntrct(:,:) ! stores derivative of phi_cntrct
 
-      ! for 2 boosted qball case; stores qball 1 or 2 data
+      ! for binary boosted qball case; stores qball 1 or 2 data
       real*8, allocatable :: phi1_n1(:,:)
       real*8, allocatable :: phi2_n1(:,:)
       real*8, allocatable :: pi1_n1(:,:)
@@ -71,22 +70,22 @@ c------------------------------------------------------------
       real*8         exppt1_r, exppt2_r ! x-points for slope
       integer        expfit_flag        ! flag to collect x-points and y-points
        
-c------------------------------------------------------------
-c     Specify model parameters
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
+c     Model parameters
+c-----------------------------------------------------------------------
 
       sigma0 = 1.375
       w      = 0.7739293
 
-      B      = 0.5d0  ! defined for use in fcn.f via common block.
+      B      = 0.5d0  ! defined for use in fcn.f via common block
       A      = 1d0      
      
-      v      = 0.9    ! velocity of boosted q-ball (c=1)
+      v      = 0.9    ! velocity of boosted Q-ball (c=1)
       gamma  = 1d0/sqrt(1d0-v**2) 
 
-c------------------------------------------------------------
-c     Set some LSODA values 
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
+c     LSODA parameters
+c-----------------------------------------------------------------------
 
       tol    = 1.0d-10
       itol   = 1 
@@ -96,11 +95,11 @@ c------------------------------------------------------------
       iopt   = 0 
       jt     = 2
       
-      ysol(1) = sigma0  ! initial conditions for fcn.f
+      ysol(1) = sigma0  ! initial condition for fcn.f
       ysol(2) = 0
 
       ! set max integration range. This is made large enough so
-      ! the q-ball is always interpolated over the entire domain
+      ! the Q-ball is always interpolated over the entire domain
       if ( (xmax-xmin) .ge. (ymax-ymin) ) then
         rmax = sqrt(2d0)*(xmax-xmin)*gamma
       else
@@ -110,34 +109,30 @@ c------------------------------------------------------------
       r      = 0.0d0
       drout  = 0.02     ! integration step size   
 
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
 c     Some new variables for convenience
-c------------------------------------------------------------
+c-----------------------------------------------------------------------
  
       Nx       = g1_Nx  ! rename for convenience
       Ny       = g1_Ny  ! rename for convenience
       gridsize = Nx*Ny
       length   = int(rmax/drout)+2  ! length of arrays along radial axis
 
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
 c     Select initial data type:
 c
-c        1  Single static q-ball
-c        2  Single boosted q-ball
-c        3  Two identical boosted q-balls
+c        1  Single static Q-ball
+c        2  Single boosted Q-ball
+c        3  Two identical boosted Q-balls
 c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       ini_type = 2
 
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
-cccccccccc          SINGLE STATIC Q-BALL           cccccccccc
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
-
-c     Note that cx and cy specify the initial position of the
-c     single q-ball.
-
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc  
+cccccccccccccc          SINGLE STATIC Q-BALL           ccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
 
       if ( ini_type .eq. 1 ) then
 
@@ -145,9 +140,9 @@ c     single q-ball.
       allocate(phi_shape_log(length))
       allocate(radial_axis(length))
 
-c     c-------------------------
-c     c Numerically integrate 
-c     c-------------------------
+      !-------------------------
+      !  Numerically integrate 
+      !-------------------------
 
       istate  = 1
       i       = 1
@@ -186,9 +181,9 @@ c     c-------------------------
         
       end do
 
-c     c-------------------------
-c     c Prepare exponential tail
-c     c-------------------------
+      !----------------------------
+      !  Prepare exponential tail
+      !----------------------------
 
       ! calculate slope
       slope = (exppt1-exppt2)/(exppt1_r-exppt2_r) 
@@ -199,9 +194,9 @@ c     c-------------------------
          j = j + 1
       enddo
 
-c     c-------------------------
-c     c Interpolate
-c     c-------------------------
+      !-------------------------
+      !  Interpolate
+      !-------------------------
 
       do i=1,Nx   ! interpolate the static solution over the entire 2D plane
       do j=1,Ny
@@ -227,9 +222,10 @@ c     c-------------------------
       phi2_n(:,:) = 0d0
       pi1_n(:,:)  = 0d0
 
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
-cccccccccc          SINGLE BOOSTED Q-BALL          cccccccccc
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
+cccccccccccccc          SINGLE BOOSTED Q-BALL          ccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
 
       elseif ( ini_type .eq. 2 ) then
      
@@ -240,9 +236,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       allocate(phi_cntrct(Nx,Ny))
       allocate(d_phi_cntrct(Nx,Ny))
 
-c     c-------------------------
-c     c Numerically integrate 
-c     c-------------------------
+      !-------------------------
+      !  Numerically integrate 
+      !-------------------------
 
       istate  = 1
       i       = 1
@@ -281,9 +277,9 @@ c     c-------------------------
 
       end do
 
-c     c-------------------------
-c     c Prepare exponential tail
-c     c-------------------------
+      !----------------------------
+      !  Prepare exponential tail
+      !----------------------------
 
       ! calculate slope
       slope = (exppt1-exppt2)/(exppt1_r-exppt2_r) 
@@ -294,9 +290,9 @@ c     c-------------------------
          j = j + 1
       enddo
 
-c     c-------------------------
-c     c Interpolate
-c     c-------------------------
+      !-------------------------
+      !  Interpolate
+      !-------------------------
 
       dx_p = gamma*dx   ! rescale dx according to Lorentz contraction
 
@@ -323,11 +319,11 @@ c     c-------------------------
       end do
       end do
 
-c     c-------------------------
-c     c Calculate derivative
-c     c-------------------------
+      !------------------------
+      !  Calculate derivative
+      !------------------------
 
-      do j=1,Ny   ! uses Crank-Nicholson 
+      do j=1,Ny   ! uses Crank-Nicolson 
 
          i=1
          d_phi_cntrct(i,j) = (-3*phi_cntrct(i,j) + 4*phi_cntrct(i+1,j)
@@ -344,9 +340,9 @@ c     c-------------------------
 
       enddo
 
-c     c-------------------------
-c     c Output boosted solution
-c     c-------------------------
+      !---------------------------
+      !  Output boosted solution
+      !---------------------------
 
       do i=1,Nx 
       do j=1,Ny
@@ -362,9 +358,9 @@ c     c-------------------------
       enddo
 
 
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
-cccccccccc      TWO IDENTICAL BOOSTED Q-BALLS      cccccccccc
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
+cccccccccccccc      TWO IDENTICAL BOOSTED Q-BALLS      ccccccccccccccccc
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc      
 
       elseif ( ini_type .eq. 3 ) then
      
@@ -384,9 +380,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       allocate(pi1_n2(Nx,Ny))
       allocate(pi2_n2(Nx,Ny))
 
-c     c-------------------------
-c     c Numerically integrate 
-c     c-------------------------
+      !-------------------------
+      !  Numerically integrate 
+      !-------------------------
 
       istate  = 1
       i       = 1
@@ -425,9 +421,9 @@ c     c-------------------------
 
       end do
 
-c     c-------------------------
-c     c Prepare exponential tail
-c     c-------------------------
+      !----------------------------
+      !  Prepare exponential tail
+      !----------------------------
 
       ! calculate slope
       slope = (exppt1-exppt2)/(exppt1_r-exppt2_r) 
@@ -438,9 +434,9 @@ c     c-------------------------
          j = j + 1
       enddo
 
-c     c-------------------------
-c     c Interpolate
-c     c-------------------------
+      !-------------------------
+      !  Interpolate
+      !-------------------------
 
       dx_p = gamma*dx   ! rescale dx according to Lorentz contraction
 
@@ -448,14 +444,14 @@ c     c-------------------------
          x_p(i) = gamma*x(i)
       enddo
 
-      do whichqball=1,2  ! superpose q-balls at different positions
+      do whichqball=1,2  ! superpose Q-balls at different positions
          if ( whichqball .eq. 1 ) then
             cx = cx1
             cy = cy1
          else
             cx = cx2
             cy = cy2
-            v  = -v  ! sends the second q-ball towards the first
+            v  = -v  ! sends the second Q-ball towards the first
          endif
       
       do i=1,Nx ! interpolate the contracted solution over the entire 2D plane
@@ -477,11 +473,11 @@ c     c-------------------------
       end do
       end do
 
-c     c-------------------------
-c     c Calculate derivative
-c     c-------------------------
+      !------------------------
+      !  Calculate derivative
+      !------------------------
 
-      do j=1,Ny  ! use Crank-Nicholson 
+      do j=1,Ny  ! use Crank-Nicolson 
 
          i=1
          d_phi_cntrct(i,j) = (-3*phi_cntrct(i,j) + 4*phi_cntrct(i+1,j)
@@ -498,9 +494,9 @@ c     c-------------------------
 
       end do
 
-c     c-------------------------
-c     c Output boosted solution
-c     c-------------------------
+      !---------------------------
+      !  Output boosted solution
+      !---------------------------
 
       if ( whichqball .eq. 1 ) then      
          do i=1,Nx 
@@ -535,7 +531,7 @@ c     c-------------------------
 
       end do
 
-      do i=1,Nx   ! combine the two q-balls calculated above
+      do i=1,Nx   ! combine the two Q-balls calculated above
       do j=1,Ny
          phi1_n(i,j) = phi1_n1(i,j) + phi1_n2(i,j)
          phi2_n(i,j) = phi2_n1(i,j) + phi2_n2(i,j)

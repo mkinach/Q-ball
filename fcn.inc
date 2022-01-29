@@ -1,5 +1,5 @@
 c-----------------------------------------------------------
-c     Application specific common block for communication 
+c     Application-specific common block for communication 
 c     with derivative evaluating routine 'fcn'.
 c
 c      w:    Frequency eigenvalue (sought eigenvalue)

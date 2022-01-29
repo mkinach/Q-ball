@@ -4,7 +4,7 @@
 
 system parameter int memsiz := 200000000
 
-### Note: these values are defined here, but are redefined in id0, id1, ...
+### Note: these values are defined here, but are redefined in *.rtparam
 
 # Grid size 
 parameter float xmin     := 0

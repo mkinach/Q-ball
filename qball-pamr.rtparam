@@ -67,11 +67,11 @@ ghost_width := [3 3]
 #                                   then gdm_grid_by_grid = 0
 #                                   else gdm_grid_by_grid = 1
 #
-# gdm_align - If non-zero then the ghost regions are "padded" so that
+# gdm_align - if non-zero then the ghost regions are "padded" so that
 #             all (local) child grid boundaries are force to align with
 #             parent gridlines. Default is 0 (off)
 #
-# gdm_no_overlap - If non-zero, then overlapping grids in the hierarchy are 
+# gdm_no_overlap - if non-zero, then overlapping grids in the hierarchy are 
 #                  clipped prior to distribution in the parallel
 #                  environment. Default is 0 (off)
 gdm_grid_by_grid := 0
@@ -102,7 +102,7 @@ rho_tm := 2
 skip_frg := 0
 
 # method used to generate the initial hierarchy of grids. Options:
-# 0 - Take a single (coarse) step of the evolution and use the truncation
+# 0 - take a single (coarse) step of the evolution and use the truncation
 #     error estimates from the TRE_vars to initialize the hierarchy
 # 1 - use a truncation error estimate from elliptic equations; only
 #     relevant for multigrid

@@ -80,7 +80,6 @@ int phi1_res_gfn,phi2_res_gfn,pi1_res_gfn,pi2_res_gfn;
 // (from /include/pamr.h) at time level 2 or 1. A GFN is basically an index
 // into an array of pointers that points to the actual grid function data
 //=============================================================================
-
 void set_gfns(void)
 {
     if ((phi1_n_gfn   = PAMR_get_gfn("phi1",PAMR_AMRH,2))<0) AMRD_stop("set_gnfs error",0);
@@ -186,8 +185,9 @@ void ldptr(void)
 }
 
 //=============================================================================
-// Utility routine to define a constant function or zero function
+// Utility routines
 //=============================================================================
+
 void const_f(real *f, real c)
 {
    int i;
@@ -227,7 +227,7 @@ real l2norm_calc(real *f)
 // Calculates the elapsed time for the calculation. If this returns 0, the 
 // default mechanism is used for initial hierarchy. If this returns 1, then
 // this function is expected to calculate the correct initial hierarchy. Here
-// I take advantage of it to compute the elapsed time of the calculation.
+// I take advantage of it to compute the elapsed time of the calculation
 //=============================================================================
 int qball_id(void)
 {
@@ -323,7 +323,7 @@ void qball_t0_cnst_data(void)
 
 //=============================================================================
 // Calculations prior to saving info to disk. This allows you to calculate 
-// diagnostic grid functions outside of the evolution loop.
+// diagnostic grid functions outside of the evolution loop
 // NOTE: at this point, the time sequence is: n,nm1,np1
 //=============================================================================
 void qball_pre_io_calc(void)
@@ -333,7 +333,7 @@ void qball_pre_io_calc(void)
 
 //=============================================================================
 // Returns some norm of the residual for the evolution variables,
-// called after an evolution iteration.
+// called after an evolution iteration
 //=============================================================================
 real qball_evo_residual(void)
 {
@@ -377,13 +377,13 @@ real qball_evo_residual(void)
   l2norm_pi1=l2norm_calc(pi1_res);
   l2norm_pi2=l2norm_calc(pi2_res);
 
-  // Normalize the computed L2-norms
+  // normalize the computed L2-norms
   if ( g_norms[phi1_n_gfn-1] > 0 ) { l2norm+=l2norm_phi1/g_norms[phi1_n_gfn-1]; }
   if ( g_norms[phi2_n_gfn-1] > 0 ) { l2norm+=l2norm_phi2/g_norms[phi2_n_gfn-1]; }
   if ( g_norms[pi1_n_gfn-1] > 0 )  { l2norm+=l2norm_pi1/g_norms[pi1_n_gfn-1];   }   
   if ( g_norms[pi1_n_gfn-1] > 0 )  { l2norm+=l2norm_pi2/g_norms[pi2_n_gfn-1];   }
 
-  // Verbose output for debugging
+  // verbose output for debugging
   if (0 && my_rank==0) 
   {
     printf("\n - - - - - - - - - - - - - - - - - - - \n");
@@ -446,13 +446,14 @@ void qball_evolve(int iter, int *ifc_mask)
 }
 
 //=============================================================================
-// sets excision mask (NO ITERATOR, SO DON'T LOAD POINTERS!!!) This is meant to
+// Sets excision mask (NO ITERATOR, SO DON'T LOAD POINTERS!!!) This is meant to
 // set points within an excised region defined by a grid function called 'mask'
 // to some value 'excised', which is mostly useful for evolutions that contain
 // black holes
 //=============================================================================
 void qball_fill_ex_mask(real *mask, real *mask_c, int dim, int *shape, int *shape_c, real *bbox, real excised)
 {
+  return;
 }
 
 //=============================================================================
@@ -460,6 +461,7 @@ void qball_fill_ex_mask(real *mask, real *mask_c, int dim, int *shape, int *shap
 //=============================================================================
 void qball_fill_bh_bboxes(real *bbox, int *num, int max_num)
 {
+  return;
 }
 
 //=============================================================================
@@ -520,7 +522,7 @@ void qball_L_op(void)
 // Called after calculating the TRE for all variables. Allows you to modify
 // the standard truncation error estimates for TRE_vars. After this is called,
 // the pointwise l2-norm of the (potentially modified) TRE_vars is computed and
-// used by AMRD to determine where to place child grids. See AMRD ref manual.
+// used by AMRD to determine where to place child grids. See AMRD ref manual
 //=============================================================================
 void qball_scale_tre(void)
 {
@@ -533,6 +535,7 @@ void qball_scale_tre(void)
 //=============================================================================
 void qball_post_regrid(void)
 {
+  return;
 }
 
 //#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
@@ -552,7 +555,7 @@ int main(int argc, char **argv)
 }
 
 //=============================================================================
-// Maintains/reports elapsed wall-clock time.
+// Maintains/reports elapsed wall-clock time
 //=============================================================================
 void elapsed_time(void) {
    static int    first = 1;

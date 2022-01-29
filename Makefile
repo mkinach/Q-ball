@@ -11,11 +11,11 @@ APP       =  qball
 # Shorten the name of some of the environment variables (convenience).
 # Also, if you want non-default flags for the compiler, set them here.
 RNPL      = $(RNPL_RNPL)
-F77				= $(RNPL_F77)
+F77       = $(RNPL_F77)
 F77_LOAD  = $(RNPL_F77LOAD)
 F77PP     = $(RNPL_F77PP)
 FLIBS     = $(RNPL_FLIBS)
-CC				= mpicc
+CC        = mpicc
 
 #### Uncomment below to enable debug flags (Fortran)
 ## -ggdb: produce debugging info for GDB
@@ -40,9 +40,9 @@ CC				= mpicc
 
 # Define some variables that are convenient for PAMR compilation
 PAMR_LIBS = -lpamr -lamrd -lbbhutil -lm -lmpi \
-					  -lodepack -lvutil -llinpack -llapack -lblas -lgfortran
+            -lodepack -lvutil -llinpack -llapack -lblas -lgfortran
 PAMR_OBJS = qball-pamr.o initializers.o updates.o fcn.o residuals.o \
-						qtotcalc-pamr.o
+            qtotcalc-pamr.o
 
 # A general rule for building object files out of '.f' files
 .f.o:
@@ -62,7 +62,7 @@ fix: Makefile
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#																R N P L 
+#                               R N P L
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #rnpl: qball qball_init
@@ -70,22 +70,22 @@ rnpl: qball
 
 # Note: rnpl_fix_f77 is a Perl program to fix syntax errors when RNPL
 # generates Fortran 77 output. See the RNPL docs
-qball.f:      qball_rnpl
+qball.f: qball_rnpl
 	$(RNPL) -l allf  qball_rnpl
 	rnpl_fix_f77 updates.f initializers.f residuals.f fcn.f
 
-updates.f:     qball_rnpl
-residuals.f:     qball_rnpl
-initializers.f:     qball_rnpl
-qball_init.f:	qball_rnpl
-fcn.o:	fcn.f fcn.inc
+updates.f: qball_rnpl
+residuals.f: qball_rnpl
+initializers.f: qball_rnpl
+qball_init.f: qball_rnpl
+fcn.o: fcn.f fcn.inc
 
 qball: qball.o updates.o residuals.o fcn.o
 	$(F77_LOAD) qball.o updates.o residuals.o fcn.o $(FLIBS) -o qball
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#																P A M R 
+#                               P A M R 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 pamr: qball-pamr
@@ -109,3 +109,5 @@ clean:
 	/bin/rm residuals.f updates.f initializers.f qball.f qball_init.f > /dev/null 2>&1
 	/bin/rm gfuni0.inc globals.inc other_glbs.inc sys_param.inc > /dev/null 2>&1
 	/bin/rm *.sdf
+	/bin/rm *.dat
+	/bin/rm .rnpl_attributes
