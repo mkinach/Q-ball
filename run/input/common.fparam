@@ -1,0 +1,33 @@
+# common fixed parameters
+
+app_name := ["Q-ball dynamics"]
+
+# number of time levels in the AMR hierarchy
+num_evo_tl := 3
+
+# time level to use for initial data generation
+ic_n := 2
+
+# initial time
+t0 := 0
+
+# "work" variables only defined in the AMR hierarchy at one time level
+AMRH_work_vars  := [ "phi1_k1" "phi1_k2" "phi1_k3" "phi1_k4" "pi1_k1" "pi1_k2" "pi1_k3" "pi1_k4" "phi2_k1" "phi2_k2" "phi2_k3" "phi2_k4" "pi2_k1" "pi2_k2" "pi2_k3" "pi2_k4" "At_k1" "At_k2" "At_k3" "At_k4" "Ax_k1" "Ax_k2" "Ax_k3" "Ax_k4" "Ay_k1" "Ay_k2" "Ay_k3" "Ay_k4" "Az_k1" "Az_k2" "Az_k3" "Az_k4" "Bt_k1" "Bt_k2" "Bt_k3" "Bt_k4" "Bx_k1" "Bx_k2" "Bx_k3" "Bx_k4" "By_k1" "By_k2" "By_k3" "By_k4" "Bz_k1" "Bz_k2" "Bz_k3" "Bz_k4" "chi_k1" "chi_k2" "chi_k3" "chi_k4" "xi_k1" "xi_k2" "xi_k3" "xi_k4" ]
+
+# variables to inject from a fine level to the coarse level at sync times
+amr_inject := [ "phi1" "phi2" "pi1" "pi2" "At" "Ax" "Ay" "Az" "Bt" "Bx" "By" "Bz" "chi" "xi" "modphi" "qden" "eden" "jdenx" "lorenz" "elecx" "elecy" "elecz" "magx" "magy" "magz" "eem" "gaussE" "gaussB" "Xx" "dxdX" "dxdX2" "Yy" "dydY" "dydY2" "Zz" "dzdZ" "dzdZ2" "jac" ]
+
+# variables that need to have their ghost regions synced after each iteration of the evolution equations
+amr_sync := [ "phi1" "phi2" "pi1" "pi2" "At" "Ax" "Ay" "Az" "Bt" "Bx" "By" "Bz" "chi" "xi" "modphi" "qden" "eden" "jdenx" "lorenz" "elecx" "elecy" "elecz" "magx" "magy" "magz" "eem" "gaussE" "gaussB" "Xx" "dxdX" "dxdX2" "Yy" "dydY" "dydY2" "Zz" "dzdZ" "dzdZ2" "jac" ]
+
+# variables that need to be interpolated on their AMR boundaries via a 4th-order spatial interpolation and 2nd-order time interpolation of the parent grid
+amr_interp4 := [ "phi1" "phi2" "pi1" "pi2" "At" "Ax" "Ay" "Az" "Bt" "Bx" "By" "Bz" "chi" "xi" "modphi" "qden" "eden" "jdenx" "lorenz" "elecx" "elecy" "elecz" "magx" "magy" "magz" "eem" "gaussE" "gaussB" "Xx" "dxdX" "dxdX2" "Yy" "dydY" "dydY2" "Zz" "dzdZ" "dzdZ2" "jac" ]
+
+# variables that will be initialized on a new patch of fine level after a regrid by 4th-order polynomial interpolation from the parent grid
+amr_transfer4 := [ "phi1" "phi2" "pi1" "pi2" "At" "Ax" "Ay" "Az" "Bt" "Bx" "By" "Bz" "chi" "xi" "modphi" "qden" "eden" "jdenx" "lorenz" "elecx" "elecy" "elecz" "magx" "magy" "magz" "eem" "gaussE" "gaussB" "Xx" "dxdX" "dxdX2" "Yy" "dydY" "dydY2" "Zz" "dzdZ" "dzdZ2" "jac" ]
+
+# variables to smooth via Kreiss-Oliger dissipation before taking a time step
+tn_diss_vars := [ "pi1" "pi2" "xi" "Bt" "Bx" "By" "Bz" ]
+
+# variables to smooth via Kreiss-Oliger dissipation after regridding
+rg_diss_vars := [ "pi1" "pi2" "xi" "Bt" "Bx" "By" "Bz" ]

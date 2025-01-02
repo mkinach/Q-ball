@@ -1,0 +1,4 @@
+# evolution-specific fixed parameters
+
+# variables which have evolution equations
+hyperbolic_vars := [ "phi1" "phi2" "pi1" "pi2" "At" "Ax" "Ay" "Az" "Bt" "Bx" "By" "Bz" "chi" "xi" "modphi" "qden" "eden" "jdenx" "lorenz" "elecx" "elecy" "elecz" "magx" "magy" "magz" "eem" "gaussE" "gaussB" "Xx" "dxdX" "dxdX2" "Yy" "dydY" "dydY2" "Zz" "dzdZ" "dzdZ2" "jac" "V" ]
