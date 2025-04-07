@@ -1,0 +1,450 @@
+########################################################################
+# System parameters
+########################################################################
+
+system parameter int memsiz := 200000000
+
+# potential type
+#  1 - logarithmic
+#  2 - polynomial
+parameter int Vtype := 2
+
+# initial data parameters (true values set in PAMR param files)
+parameter float cR       := 0.0
+parameter float cX       := 0.0
+parameter float cR1      := 0.0
+parameter float cX1      := 25.0
+parameter float cR2      := 0.0
+parameter float cX2      := -25.0
+parameter float Rmin     := 0.0
+parameter float Rmax     := 50.0
+parameter float Xmin     := -50.0
+parameter float Xmax     := 50.0
+parameter float e        := 0.0
+parameter float w        := 0.0
+parameter float mu       := 0.0
+parameter float beta     := 0.0
+parameter float h        := 0.0
+parameter float mm       := 0.0
+parameter float gg       := 0.0
+parameter float cc       := 0.0
+parameter float amp      := 0.0
+parameter float delta    := 1
+parameter float r0       := 20.0
+parameter float R_center := 0
+parameter float X_center := 0
+parameter float Rw       := 0.9
+parameter float Xw       := 1.1
+parameter float signum   := 0
+
+# Kreiss-Oliger dissipation parameter (UNUSED)
+parameter float epsdis := 0.5
+
+# boundary parameters for parallel code; if 1, then the boundary is a
+# physical boundary (instead of an interior AMR or processor boundary)
+parameter int Rmin_pb := 1
+parameter int Rmax_pb := 1
+parameter int Xmin_pb := 1
+parameter int Xmax_pb := 1
+
+########################################################################
+# Coordinate grids
+########################################################################
+
+rec coordinates t,R,X
+
+uniform rec grid g1 [1:NR][1:NX] {Rmin:Rmax}{Xmin:Xmax}
+
+# defined at 0,1 since we use a two-level Crank-Nicolson method
+float modphi     on g1 at 0,1 {out_gf = 1}
+float phi1       on g1 at 0,1 {out_gf = 1}
+float phi2       on g1 at 0,1 {out_gf = 1}
+float pi1        on g1 at 0,1 {out_gf = 1}
+float pi2        on g1 at 0,1 {out_gf = 1}
+float A_t        on g1 at 0,1 {out_gf = 1}
+float Atilde_p   on g1 at 0,1 {out_gf = 1}
+float Atilde_phi on g1 at 0,1 {out_gf = 1}
+float A_z        on g1 at 0,1 {out_gf = 1}
+float B_t        on g1 at 0,1 {out_gf = 1}
+float Btilde_p   on g1 at 0,1 {out_gf = 1}
+float Btilde_phi on g1 at 0,1 {out_gf = 1}
+float B_z        on g1 at 0,1 {out_gf = 1}
+float Eden       on g1 at 0,1 {out_gf = 1}
+float Eem        on g1 at 0,1 {out_gf = 1}
+float Qden       on g1 at 0,1 {out_gf = 1}
+float elec_p     on g1 at 0,1 {out_gf = 1}
+float elec_phi   on g1 at 0,1 {out_gf = 1}
+float elec_z     on g1 at 0,1 {out_gf = 1}
+float mag_p      on g1 at 0,1 {out_gf = 1}
+float mag_phi    on g1 at 0,1 {out_gf = 1}
+float mag_z      on g1 at 0,1 {out_gf = 1}
+float gaugecond  on g1 at 0,1 {out_gf = 1}
+float divE       on g1 at 0,1 {out_gf = 1}
+float divB       on g1 at 0,1 {out_gf = 1}
+float chi        on g1 at 0,1 {out_gf = 1}
+float xi         on g1 at 0,1 {out_gf = 1}
+
+float phi1ire on g1 at 0,1 {out_gf = 1}
+float phi2ire on g1 at 0,1 {out_gf = 1}
+float atire   on g1 at 0,1 {out_gf = 1}
+float apire   on g1 at 0,1 {out_gf = 1}
+float azire   on g1 at 0,1 {out_gf = 1}
+
+float dummy on g1 at 0,1 {out_gf = 1}
+
+float dRdp  on g1 at 0 {out_gf=1}
+float dRdp2 on g1 at 0 {out_gf=1}
+float dXdz  on g1 at 0 {out_gf=1}
+float dXdz2 on g1 at 0 {out_gf=1}
+float pR    on g1 at 0 {out_gf=1}
+float zX    on g1 at 0 {out_gf=1}
+
+########################################################################
+# Operator definitions
+########################################################################
+
+# O(h^2) centered 1st spatial derivative
+operator D0(f,R) := (<0>f[1][0] - <0>f[-1][0]) / (2.0*dR)
+operator D0(f,X) := (<0>f[0][1] - <0>f[0][-1]) / (2.0*dX)
+operator FD0(f,R) := FTL((<0>f[1][0] - <0>f[-1][0]) / (2.0*dR),t)
+operator FD0(f,X) := FTL((<0>f[0][1] - <0>f[0][-1]) / (2.0*dX),t)
+
+# O(h^2) centered 2nd spatial derivative
+operator D02(f,R) := (<0>f[1][0] - 2.0*<0>f[0][0] + <0>f[-1][0]) / (dR^2.0)
+operator D02(f,X) := (<0>f[0][1] - 2.0*<0>f[0][0] + <0>f[0][-1]) / (dX^2.0)
+operator FD02(f,R) := FTL((<0>f[1][0] - 2.0*<0>f[0][0] + <0>f[-1][0]) / (dR^2.0),t)
+operator FD02(f,X) := FTL((<0>f[0][1] - 2.0*<0>f[0][0] + <0>f[0][-1]) / (dX^2.0),t)
+
+# O(h^2) forwards 1st spatial derivative
+operator DF(f,R) := (-3.0*<0>f[0][0] + 4.0*<0>f[1][0] - <0>f[2][0]) / (2.0*dR)
+operator DF(f,X) := (-3.0*<0>f[0][0] + 4.0*<0>f[0][1] - <0>f[0][2]) / (2.0*dX)
+operator FDF(f,R) := FTL((-3.0*<0>f[0][0] + 4.0*<0>f[1][0] - <0>f[2][0]) / (2.0*dR),t)
+operator FDF(f,X) := FTL((-3.0*<0>f[0][0] + 4.0*<0>f[0][1] - <0>f[0][2]) / (2.0*dX),t)
+
+# O(h^2) backwards 1st spatial derivative
+operator DB(f,R) := (3.0*<0>f[0][0] - 4.0*<0>f[-1][0] + <0>f[-2][0]) / (2.0*dR)
+operator DB(f,X) := (3.0*<0>f[0][0] - 4.0*<0>f[0][-1] + <0>f[0][-2]) / (2.0*dX)
+operator FDB(f,R) := FTL((3.0*<0>f[0][0] - 4.0*<0>f[-1][0] + <0>f[-2][0]) / (2.0*dR),t)
+operator FDB(f,X) := FTL((3.0*<0>f[0][0] - 4.0*<0>f[0][-1] + <0>f[0][-2]) / (2.0*dX),t)
+
+# O(h^2) Crank-Nicolson 1st time derivative
+operator DCNt(f,t) := (<1>f[0][0] - <0>f[0][0]) / dt
+
+# Crank-Nicolson forward time average
+operator AVG(f,t) := (<1>f[0][0] + <0>f[0][0]) / 2.0
+
+# other Crank-Nicolson derivatives
+operator DCN0(f,R) := AVG(D0(<0>f[0][0],R),t)
+operator DCN0(f,X) := AVG(D0(<0>f[0][0],X),t)
+
+operator DCN02(f,R) := AVG(D02(<0>f[0][0],R),t)
+operator DCN02(f,X) := AVG(D02(<0>f[0][0],X),t)
+
+operator DCNF(f,R) := AVG(DF(<0>f[0][0],R),t)
+operator DCNF(f,X) := AVG(DF(<0>f[0][0],X),t)
+
+operator DCNB(f,R) := AVG(DB(<0>f[0][0],R),t)
+operator DCNB(f,X) := AVG(DB(<0>f[0][0],X),t)
+
+# future time level operator
+operator FTL(f,t) := <1>f[0][0]
+
+# quadratic fit operator
+operator QFIT(f,R) := <1>f[0][0] - (4.0/3.0)*<1>f[1][0] + (1.0/3.0)*<1>f[2][0]
+
+########################################################################
+# Equations of motion & boundary conditions
+########################################################################
+
+residual modphi {
+  [1:NR][1:NX] := FTL(modphi,t) = sqrt(AVG(phi1,t)^2.0 + AVG(phi2,t)^2.0);
+}
+
+residual gaugecond {
+  [1:1][2:NX-1]    := FTL(gaugecond,t) = 2.0*FTL(Atilde_p, t) + pR*FDF(Atilde_p, R)*dRdp + FD0(A_z, X)*dXdz - FTL(B_t, t);
+  [2:NR-1][2:NX-1] := FTL(gaugecond,t) = 2.0*FTL(Atilde_p, t) + pR*FD0(Atilde_p, R)*dRdp + FD0(A_z, X)*dXdz - FTL(B_t, t);
+}
+
+residual divE {
+  [2:NR-1][2:NX-1] := FTL(divE,t) = FD02(A_t, R)*dRdp^2 + FD0(A_t, R)*dRdp2 + FD0(A_t, R)*dRdp/pR - 2*FTL(Btilde_p, t) - pR*FD0(Btilde_p, R)*dRdp + FD02(A_t, X)*dXdz^2 + FD0(A_t, X)*dXdz2 - FD0(B_z, X)*dXdz - e*FTL(Qden, t);
+}
+
+residual divB {
+  [2:NR-1][2:NX-1] := FTL(divB,t) = FTL(magB_p, t)/pR + FD0(magB_p, R)*dRdp + FD0(magB_z, X)*dXdz;
+}
+
+residual Eem {
+  [2:NR][1:NX] := FTL(Eem,t) = 0.5*((FTL(elec_p, t)^2+FTL(elec_phi,t)^2/pR^2+FTL(elec_z,t)^2)+(FTL(mag_p, t)^2+FTL(mag_phi,t)^2/pR^2+FTL(mag_z,t)^2));
+}
+
+residual Qden {
+  [1:NR][1:NX] := FTL(Qden,t) = 2.0*(FTL(phi2,t)*FTL(pi1,t) - FTL(phi1,t)*FTL(pi2,t)) + 2.0*e*FTL(A_t,t)*(FTL(phi1,t)^2.0+FTL(phi2,t)^2.0);
+}
+
+residual elec_p {
+  [1:1][1:NX]    := FTL(elec_p,t) = FDF(A_t, R)*dRdp-pR*FTL(Btilde_p, t);
+  [2:NR-1][1:NX] := FTL(elec_p,t) = FD0(A_t, R)*dRdp-pR*FTL(Btilde_p, t);
+}
+
+residual elec_phi {
+  [1:NR][1:NX] := FTL(elec_phi,t) = -pR^2.0*FTL(Btilde_phi, t);
+}
+
+residual elec_z {
+  [1:NR][2:NX-1] := FTL(elec_z,t) = FD0(A_t, X)*dXdz-FTL(B_z, t);
+}
+
+residual mag_p {
+  [1:NR][2:NX-1] := FTL(mag_p,t) = -pR*FD0(Atilde_phi, X)*dXdz;
+}
+
+residual mag_phi {
+  [1:1][2:NX-1]    := FTL(mag_phi,t) = pR^2*FD0(Atilde_p, X)*dXdz-pR*FDF(A_z, R)*dRdp;
+  [2:NR-1][2:NX-1] := FTL(mag_phi,t) = pR^2*FD0(Atilde_p, X)*dXdz-pR*FD0(A_z, R)*dRdp;
+}
+
+residual mag_z {
+  [1:1][1:NX]    := FTL(mag_z,t) = pR*FDF(Atilde_phi, R)*dRdp;
+  [2:NR-1][1:NX] := FTL(mag_z,t) = pR*FD0(Atilde_phi, R)*dRdp;
+}
+
+evaluate residual chi {
+  [1:NR][1:NX] := DCNt(chi,t) = AVG(xi,t);
+}
+
+evaluate residual xi {
+# interior region
+  [2:NR-1][2:NX-1] := DCNt(xi, t) = -cc*AVG(chi, t)*AVG(phi1, t)^2 - cc*AVG(chi, t)*AVG(phi2, t)^2 + DCN02(chi, R)*dRdp^2 + DCN0(chi, R)*dRdp2 + DCN02(chi, X)*dXdz^2 + DCN0(chi, X)*dXdz2 + DCN0(chi, R)*dRdp/pR;
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCN0(xi,R)*dRdp + zX*DCNF(xi,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCNB(xi,R)*dRdp + zX*DCNF(xi,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCN0(xi,R)*dRdp + zX*DCNB(xi,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCNB(xi,R)*dRdp + zX*DCNB(xi,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCNB(xi,R)*dRdp + zX*DCN0(xi,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCNF(xi,R)*dRdp + zX*DCNB(xi,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(xi,t) + AVG(xi,t) + pR*DCNF(xi,R)*dRdp + zX*DCNF(xi,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(xi,R) = 0;
+}
+
+evaluate residual phi1 {
+  [1:NR][1:NX] := DCNt(phi1,t) = AVG(pi1,t);
+}
+
+evaluate residual phi2 {
+  [1:NR][1:NX] := DCNt(phi2,t) = AVG(pi2,t);
+}
+
+evaluate residual pi1 {
+# interior region
+  [2:NR-1][2:NX-1] :=
+
+# logarithmic potential
+  if ( Vtype == 1 && <1>modphi[0][0] < 1.0e-50 && <0>modphi[0][0] < 1.0e-50 ) then
+    DCNt(pi1, t) = ((-AVG(Atilde_p, t)^2*AVG(phi1, t)-AVG(phi1, t)*AVG(Atilde_phi, t)^2)*pR^2+AVG(A_t, t)^2*AVG(phi1, t)-AVG(A_z, t)^2*AVG(phi1, t))*e^2+(2*pR*AVG(Atilde_p, t)*DCN0(phi2, R)*dRdp-2*AVG(A_t, t)*AVG(pi2, t)+2*AVG(A_z, t)*DCN0(phi2, X)*dXdz)*e+DCN02(phi1, R)*dRdp^2+DCN0(phi1, R)*dRdp2+DCN02(phi1, X)*dXdz^2+DCN0(phi1, X)*dXdz2+DCN0(phi1, R)*dRdp/pR-cc*AVG(chi, t)^2.0*AVG(phi1, t)
+  else if (Vtype == 1) then
+    DCNt(pi1, t) = ((-AVG(Atilde_p, t)^2*AVG(phi1, t)-AVG(phi1, t)*AVG(Atilde_phi, t)^2)*pR^2+AVG(A_t, t)^2*AVG(phi1, t)-AVG(A_z, t)^2*AVG(phi1, t))*e^2+(2*pR*AVG(Atilde_p, t)*DCN0(phi2, R)*dRdp-2*AVG(A_t, t)*AVG(pi2, t)+2*AVG(A_z, t)*DCN0(phi2, X)*dXdz)*e+DCN02(phi1, R)*dRdp^2+DCN0(phi1, R)*dRdp2+DCN02(phi1, X)*dXdz^2+DCN0(phi1, X)*dXdz2+DCN0(phi1, R)*dRdp/pR - (1.0/2.0)*(-2.0)*AVG(phi1,t)*mu^2.0*(log(beta^2*AVG(modphi,t)*AVG(modphi,t))+1.0)-cc*AVG(chi, t)^2.0*AVG(phi1, t)
+
+# polynomial potential
+  else if (Vtype == 2) then
+    DCNt(pi1, t) = ((-AVG(Atilde_p, t)^2*AVG(phi1, t)-AVG(phi1, t)*AVG(Atilde_phi, t)^2)*pR^2+AVG(A_t, t)^2*AVG(phi1, t)-AVG(A_z, t)^2*AVG(phi1, t))*e^2+(2*pR*AVG(Atilde_p, t)*DCN0(phi2, R)*dRdp-2*AVG(A_t, t)*AVG(pi2, t)+2*AVG(A_z, t)*DCN0(phi2, X)*dXdz)*e+DCN02(phi1, R)*dRdp^2+DCN0(phi1, R)*dRdp2+DCN02(phi1, X)*dXdz^2+DCN0(phi1, X)*dXdz2+DCN0(phi1, R)*dRdp/pR - (1.0/2.0)*(2.0*h*AVG(modphi,t)^4*AVG(phi1,t)-2.0*gg*AVG(modphi,t)^2*AVG(phi1,t)+2.0*mm*AVG(phi1,t)) - cc*AVG(chi, t)^2.0*AVG(phi1, t);
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCN0(pi1,R)*dRdp + zX*DCNF(pi1,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCNB(pi1,R)*dRdp + zX*DCNF(pi1,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCN0(pi1,R)*dRdp + zX*DCNB(pi1,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCNB(pi1,R)*dRdp + zX*DCNB(pi1,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCNB(pi1,R)*dRdp + zX*DCN0(pi1,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCNF(pi1,R)*dRdp + zX*DCNB(pi1,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi1,t) + AVG(pi1,t) + pR*DCNF(pi1,R)*dRdp + zX*DCNF(pi1,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(pi1,R) = 0;
+}
+
+evaluate residual pi2 {
+# interior region
+  [2:NR-1][2:NX-1] :=
+
+# logarithmic potential
+  if ( Vtype == 1 && <1>modphi[0][0] < 1.0e-50 && <0>modphi[0][0] < 1.0e-50 ) then
+    DCNt(pi2, t) = ((-AVG(Atilde_phi, t)^2*AVG(phi2, t)-AVG(Atilde_p, t)^2*AVG(phi2, t))*pR^2+AVG(A_t, t)^2*AVG(phi2, t)-AVG(A_z, t)^2*AVG(phi2, t))*e^2+(-2*pR*AVG(Atilde_p, t)*DCN0(phi1, R)*dRdp+2*AVG(A_t, t)*AVG(pi1, t)-2*AVG(A_z, t)*DCN0(phi1, X)*dXdz)*e+DCN02(phi2, R)*dRdp^2+DCN0(phi2, R)*dRdp2+DCN02(phi2, X)*dXdz^2+DCN0(phi2, X)*dXdz2+DCN0(phi2, R)*dRdp/pR-cc*AVG(chi, t)^2.0*AVG(phi2, t)
+  else if (Vtype == 1) then
+    DCNt(pi2, t) = ((-AVG(Atilde_phi, t)^2*AVG(phi2, t)-AVG(Atilde_p, t)^2*AVG(phi2, t))*pR^2+AVG(A_t, t)^2*AVG(phi2, t)-AVG(A_z, t)^2*AVG(phi2, t))*e^2+(-2*pR*AVG(Atilde_p, t)*DCN0(phi1, R)*dRdp+2*AVG(A_t, t)*AVG(pi1, t)-2*AVG(A_z, t)*DCN0(phi1, X)*dXdz)*e+DCN02(phi2, R)*dRdp^2+DCN0(phi2, R)*dRdp2+DCN02(phi2, X)*dXdz^2+DCN0(phi2, X)*dXdz2+DCN0(phi2, R)*dRdp/pR - (1.0/2.0)*(-2.0)*AVG(phi2,t)*mu^2.0*(log(beta^2*AVG(modphi,t)*AVG(modphi,t))+1.0)-cc*AVG(chi, t)^2.0*AVG(phi2, t)
+
+# polynomial potential
+  else if (Vtype == 2) then
+    DCNt(pi2, t) = ((-AVG(Atilde_phi, t)^2*AVG(phi2, t)-AVG(Atilde_p, t)^2*AVG(phi2, t))*pR^2+AVG(A_t, t)^2*AVG(phi2, t)-AVG(A_z, t)^2*AVG(phi2, t))*e^2+(-2*pR*AVG(Atilde_p, t)*DCN0(phi1, R)*dRdp+2*AVG(A_t, t)*AVG(pi1, t)-2*AVG(A_z, t)*DCN0(phi1, X)*dXdz)*e+DCN02(phi2, R)*dRdp^2+DCN0(phi2, R)*dRdp2+DCN02(phi2, X)*dXdz^2+DCN0(phi2, X)*dXdz2+DCN0(phi2, R)*dRdp/pR - (1.0/2.0)*(2.0*h*AVG(modphi,t)^4*AVG(phi2,t)-2.0*gg*AVG(modphi,t)^2*AVG(phi2,t)+2.0*mm*AVG(phi2,t)) - cc*AVG(chi, t)^2.0*AVG(phi2, t);
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCN0(pi2,R)*dRdp + zX*DCNF(pi2,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCNB(pi2,R)*dRdp + zX*DCNF(pi2,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCN0(pi2,R)*dRdp + zX*DCNB(pi2,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCNB(pi2,R)*dRdp + zX*DCNB(pi2,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCNB(pi2,R)*dRdp + zX*DCN0(pi2,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCNF(pi2,R)*dRdp + zX*DCNB(pi2,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(pi2,t) + AVG(pi2,t) + pR*DCNF(pi2,R)*dRdp + zX*DCNF(pi2,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(pi2,R) = 0;
+}
+
+evaluate residual A_t {
+  [1:NR][1:NX] := DCNt(A_t,t) = AVG(B_t,t);
+}
+
+evaluate residual Atilde_p {
+  [1:NR][1:NX] := DCNt(Atilde_p,t) = AVG(Btilde_p,t);
+}
+
+evaluate residual Atilde_phi {
+  [1:NR][1:NX] := DCNt(Atilde_phi,t) = AVG(Btilde_phi,t);
+}
+
+evaluate residual A_z {
+  [1:NR][1:NX] := DCNt(A_z,t) = AVG(B_z,t);
+}
+
+evaluate residual B_t {
+# interior region
+  [2:NR-1][2:NX-1] := DCNt(B_t, t) = (-2*AVG(phi1, t)^2*AVG(A_t, t)-2*AVG(A_t, t)*AVG(phi2, t)^2)*e^2+(2*AVG(pi2, t)*AVG(phi1, t)-2*AVG(pi1, t)*AVG(phi2, t))*e+DCN02(A_t, R)*dRdp^2+DCN0(A_t, R)*dRdp2+DCN02(A_t, X)*dXdz^2+DCN0(A_t, X)*dXdz2+DCN0(A_t, R)*dRdp/pR;
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCN0(B_t,R)*dRdp + zX*DCNF(B_t,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCNB(B_t,R)*dRdp + zX*DCNF(B_t,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCN0(B_t,R)*dRdp + zX*DCNB(B_t,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCNB(B_t,R)*dRdp + zX*DCNB(B_t,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCNB(B_t,R)*dRdp + zX*DCN0(B_t,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCNF(B_t,R)*dRdp + zX*DCNB(B_t,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_t,t) + AVG(B_t,t) + pR*DCNF(B_t,R)*dRdp + zX*DCNF(B_t,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(B_t,R) = 0;
+}
+
+evaluate residual Btilde_p {
+# interior region
+  [2:NR-1][2:NX-1] := DCNt(Btilde_p, t) = (-2*AVG(phi1, t)^2*AVG(Atilde_p, t)-2*AVG(Atilde_p, t)*AVG(phi2, t)^2)*e^2+(2*AVG(phi1, t)*DCN0(phi2, R)*dRdp-2*AVG(phi2, t)*DCN0(phi1, R)*dRdp)*e/pR+DCN02(Atilde_p, R)*dRdp^2+DCN0(Atilde_p, R)*dRdp2+DCN02(Atilde_p, X)*dXdz^2+DCN0(Atilde_p, X)*dXdz2+3*DCN0(Atilde_p, R)*dRdp/pR;
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCN0(Btilde_p,R)*dRdp + zX*DCNF(Btilde_p,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCNB(Btilde_p,R)*dRdp + zX*DCNF(Btilde_p,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCN0(Btilde_p,R)*dRdp + zX*DCNB(Btilde_p,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCNB(Btilde_p,R)*dRdp + zX*DCNB(Btilde_p,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCNB(Btilde_p,R)*dRdp + zX*DCN0(Btilde_p,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCNF(Btilde_p,R)*dRdp + zX*DCNB(Btilde_p,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_p,t) + AVG(Btilde_p,t) + pR*DCNF(Btilde_p,R)*dRdp + zX*DCNF(Btilde_p,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(Btilde_p,R) = 0;
+}
+
+evaluate residual Btilde_phi {
+# interior region
+  [2:NR-1][2:NX-1] := DCNt(Btilde_phi, t) = (-2*AVG(phi1, t)^2*AVG(Atilde_phi, t)-2*AVG(phi2, t)^2*AVG(Atilde_phi, t))*e^2+DCN02(Atilde_phi, X)*dXdz^2+DCN0(Atilde_phi, X)*dXdz2+DCN02(Atilde_phi, R)*dRdp^2+DCN0(Atilde_phi, R)*dRdp2+3*DCN0(Atilde_phi, R)*dRdp/pR;
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCN0(Btilde_phi,R)*dRdp + zX*DCNF(Btilde_phi,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCNB(Btilde_phi,R)*dRdp + zX*DCNF(Btilde_phi,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCN0(Btilde_phi,R)*dRdp + zX*DCNB(Btilde_phi,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCNB(Btilde_phi,R)*dRdp + zX*DCNB(Btilde_phi,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCNB(Btilde_phi,R)*dRdp + zX*DCN0(Btilde_phi,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCNF(Btilde_phi,R)*dRdp + zX*DCNB(Btilde_phi,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(Btilde_phi,t) + AVG(Btilde_phi,t) + pR*DCNF(Btilde_phi,R)*dRdp + zX*DCNF(Btilde_phi,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(Btilde_phi,R) = 0;
+}
+
+evaluate residual B_z {
+# interior region
+  [2:NR-1][2:NX-1] := DCNt(B_z, t) = (-2*AVG(phi1, t)^2*AVG(A_z, t)-2*AVG(A_z, t)*AVG(phi2, t)^2)*e^2+(2*AVG(phi1, t)*DCN0(phi2, X)*dXdz-2*AVG(phi2, t)*DCN0(phi1, X)*dXdz)*e+DCN02(A_z, R)*dRdp^2+DCN0(A_z, R)*dRdp2+DCN02(A_z, X)*dXdz^2+DCN0(A_z, X)*dXdz2+DCN0(A_z, R)*dRdp/pR;
+
+# outer boundaries
+  [2:NR-1][1:1]   := if ( Xmin_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCN0(B_z,R)*dRdp + zX*DCNF(B_z,X)*dXdz = 0;
+  [NR:NR][1:1]    := if ( Rmax_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCNB(B_z,R)*dRdp + zX*DCNF(B_z,X)*dXdz = 0;
+  [2:NR-1][NX:NX] := if ( Xmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCN0(B_z,R)*dRdp + zX*DCNB(B_z,X)*dXdz = 0;
+  [NR:NR][NX:NX]  := if ( Rmax_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCNB(B_z,R)*dRdp + zX*DCNB(B_z,X)*dXdz = 0;
+  [NR:NR][2:NX-1] := if ( Rmax_pb == 1 )                 then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCNB(B_z,R)*dRdp + zX*DCN0(B_z,X)*dXdz = 0;
+  [1:1][NX:NX]    := if ( Rmin_pb == 1 && Xmax_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCNF(B_z,R)*dRdp + zX*DCNB(B_z,X)*dXdz = 0;
+  [1:1][1:1]      := if ( Rmin_pb == 1 && Xmin_pb == 1 ) then sqrt(pR^2.0+zX^2.0)*DCNt(B_z,t) + AVG(B_z,t) + pR*DCNF(B_z,R)*dRdp + zX*DCNF(B_z,X)*dXdz = 0;
+  [1:1][2:NX-1]   := if ( Rmin_pb == 1 )                 then QFIT(B_z,R) = 0;
+}
+
+# dummy grid function to compute integrals (updated manually below)
+residual dummy {
+  [1:NR][1:NX] := <1>dummy[0][0] = 0.0;
+}
+
+########################################################################
+# Initializations
+########################################################################
+
+# RNPL-generated initializations
+initialize  modphi    { [1:NR][1:NX] := sqrt(phi1^2.0 + phi2^2.0) }
+initialize  gaugecond { [1:NR][1:NX] := 0 }
+initialize  divE      { [1:NR][1:NX] := 0 }
+initialize  divB      { [1:NR][1:NX] := 0 }
+initialize  Eden      { [1:NR][1:NX] := 0 }
+initialize  Eem       { [1:NR][1:NX] := 0 }
+initialize  Qden      { [1:NR][1:NX] := 2.0*(phi2*pi1-phi1*pi2)+2.0*e*A_t*modphi^2.0 }
+initialize  elec_p    { [1:NR][1:NX] := 0 }
+initialize  elec_phi  { [1:NR][1:NX] := 0 }
+initialize  elec_z    { [1:NR][1:NX] := 0 }
+initialize  mag_p     { [1:NR][1:NX] := 0 }
+initialize  mag_phi   { [1:NR][1:NX] := 0 }
+initialize  mag_z     { [1:NR][1:NX] := 0 }
+
+initialize  chi       { [1:NR][1:NX]     := amp*exp(-(sqrt(((pR-R_center)/Rw)^2.0+((zX-X_center)/Xw)^2.0)-r0)^2/delta^2); }
+initialize  xi        { [2:NR-1][2:NX-1] := signum*(chi+pR*D0(chi, R)*dRdp+zX*D0(chi, X)*dXdz)/sqrt(pR^2+zX^2);
+                        [1:1][2:NX-1]    := if ( (pR)^2+(zX)^2 == 0 ) then 0
+                                            else signum*(chi+pR*DF(chi, R)*dRdp+zX*D0(chi, X)*dXdz)/sqrt(pR^2+zX^2); }
+
+initialize  phi1ire     { [1:NR][1:NX] := 0 }
+initialize  phi2ire     { [1:NR][1:NX] := 0 }
+initialize  atire       { [1:NR][1:NX] := 0 }
+initialize  apire       { [1:NR][1:NX] := 0 }
+initialize  azire       { [1:NR][1:NX] := 0 }
+
+initialize  dummy       { [1:NR][1:NX] := 0 }
+
+## uncomment these two lines to disable perturbation
+#initialize  chi         { [1:NR][1:NX] := 0 }
+#initialize  xi          { [1:NR][1:NX] := 0 }
+
+# compactified coordinate parameters
+parameter float c := 0.05
+parameter float d := 10
+initialize dRdp  { [1:NR][1:NX] := 1/(c*sqrt(4*d^2 + (d*exp(c*R) - d*exp(-c*R))^2)) }
+initialize dRdp2 { [1:NR][1:NX] := -(d*exp(c*R) - d*exp(-c*R))/(c*(4*d^2 + (d*exp(c*R) - d*exp(-c*R))^2)^(3/2)) }
+initialize dXdz  { [1:NR][1:NX] := 1/(c*sqrt(4*d^2 + (d*exp(c*X) - d*exp(-c*X))^2)) }
+initialize dXdz2 { [1:NR][1:NX] := -(d*exp(c*X) - d*exp(-c*X))/(c*(4*d^2 + (d*exp(c*X) - d*exp(-c*X))^2)^(3/2)) }
+initialize pR    { [1:NR][1:NX] := d*exp(c*R) - d*exp(-c*R) }
+initialize zX    { [1:NR][1:NX] := d*exp(c*X) - d*exp(-c*X) }
+
+# uncomment these lines to switch to linear coordinates
+parameter float c := 1.0
+parameter float d := 1.0
+initialize dRdp  { [1:NR][1:NX] := 1 }
+initialize dRdp2 { [1:NR][1:NX] := 0 }
+initialize dXdz  { [1:NR][1:NX] := 1 }
+initialize dXdz2 { [1:NR][1:NX] := 0 }
+initialize pR    { [1:NR][1:NX] := R }
+initialize zX    { [1:NR][1:NX] := X }
+
+# manual initializations for values in init_qball.inc
+auto initialize dRdp, dRdp2, dXdz, dXdz2, pR, zX
+auto initialize phi1ire, phi2ire, atire, apire, azire
+init_qball.inc init_qball initialize phi1, phi2, pi1, pi2, A_t, Atilde_p, Atilde_phi, A_z, B_t, Btilde_p, Btilde_phi, B_z
+  HEADER
+      w, e, c, d, pR, zX, R, X, cR, cX, cR1, cX1, cR2, cX2, dR, dX, Rmax, Rmin, Xmax, Xmin, phi1, phi2, pi1, pi2, A_t, Atilde_p, Atilde_phi, A_z, B_t, Btilde_p, Btilde_phi, B_z, dRdp, dRdp2, dXdz, dXdz2
+
+# automatic initializations
+auto initialize modphi, gaugecond, divE, divB, Eden, Eem, Qden, elec_p, elec_phi, elec_z, mag_p, mag_phi, mag_z, chi, xi, dummy
+
+########################################################################
+# Updates
+########################################################################
+
+looper iterative
+
+auto update modphi, phi1, phi2, pi1, pi2, A_t, Atilde_p, Atilde_phi, A_z, B_t, Btilde_p, Btilde_phi, B_z, gaugecond, divE, divB, Eem, Qden, elec_p, elec_phi, elec_z, mag_p, mag_phi, mag_z, chi, xi
+
+Edencalc.inc edencalc updates Eden
+  HEADER Eden, phi1, phi2, pi1, pi2, A_t, A_z, Atilde_p, Atilde_phi, B_t, Btilde_p, Btilde_phi, B_z, modphi, chi, xi, NR, NX, R, X, dR, dX, dt, c, d, pR, zX, dRdp, dRdp2, dXdz, dXdz2, e, cc, Vtype, mm, gg, h, cc, beta, mu
+
+integrate.inc intcalc updates dummy
+  HEADER dR, dX, Qden, Eden, Eem, dummy, R, X, t, c, d, dRdp, dXdz
+
+ire.inc ire updates phi1ire, phi2ire, atire, apire, azire
+  HEADER phi1, phi2, pi1, pi2, A_t, A_z, Atilde_p, Atilde_phi, B_t, Btilde_p, Btilde_phi, B_z, modphi, chi, xi, NR, NX, R, X, dR, dX, dt, c, d, pR, zX, dRdp, dRdp2, dXdz, dXdz2, e, cc, Vtype, mm, gg, h, cc, beta, mu, phi1ire, phi2ire, atire, apire, azire

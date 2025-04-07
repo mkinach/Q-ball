@@ -1,0 +1,40 @@
+# common fixed parameters
+
+app_name := ["Q-ball dynamics"]
+
+# number of time levels in the AMR hierarchy
+# (hack to reduce AMR child grid errors)
+num_evo_tl := 3
+
+# time level to use for initial data generation
+ic_n := 2
+
+# order of temporal interpolation to use on boundaries
+max_t_interp_order := 3
+
+# initial time
+t0 := 0
+
+# "work" variables only defined in the AMR hierarchy at one time level
+AMRH_work_vars := [ "chi_res" "xi_res" "phi1_res" "phi2_res" "pi1_res" "pi2_res" "A_t_res" "Atilde_p_res" "Atilde_phi_res" "A_z_res" "B_t_res" "Btilde_p_res" "Btilde_phi_res" "B_z_res"]
+
+# variables to inject from a fine level to the coarse level at sync times
+amr_inject := [ "modphi" "phi1" "phi2" "pi1" "pi2" "A_t" "Atilde_p" "Atilde_phi" "A_z" "B_t" "Btilde_p" "Btilde_phi" "B_z" "gaugecond" "divE" "divB" "Eden" "Eem" "Qden" "elec_p" "elec_phi" "elec_z" "mag_p" "mag_phi" "mag_z" "chi" "xi" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]
+
+# variables that need to have their ghost regions synced after each iteration of the evolution equations
+amr_sync := [ "modphi" "phi1" "phi2" "pi1" "pi2" "A_t" "Atilde_p" "Atilde_phi" "A_z" "B_t" "Btilde_p" "Btilde_phi" "B_z" "gaugecond" "divE" "divB" "Eden" "Eem" "Qden" "elec_p" "elec_phi" "elec_z" "mag_p" "mag_phi" "mag_z" "chi" "xi" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]
+
+# variables that need to be interpolated on their AMR boundaries via a 4th-order spatial interpolation and 2nd-order time interpolation of the parent grid
+amr_interp4 := [ "modphi" "phi1" "phi2" "pi1" "pi2" "A_t" "Atilde_p" "Atilde_phi" "A_z" "B_t" "Btilde_p" "Btilde_phi" "B_z" "gaugecond" "divE" "divB" "Eden" "Eem" "Qden" "elec_p" "elec_phi" "elec_z" "mag_p" "mag_phi" "mag_z" "chi" "xi" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]
+
+# variables that will be initialized on a new patch of fine level after a regrid by 4th-order polynomial interpolation from the parent grid
+amr_transfer4 := [ "modphi" "phi1" "phi2" "pi1" "pi2" "A_t" "Atilde_p" "Atilde_phi" "A_z" "B_t" "Btilde_p" "Btilde_phi" "B_z" "gaugecond" "divE" "divB" "Eden" "Eem" "Qden" "elec_p" "elec_phi" "elec_z" "mag_p" "mag_phi" "mag_z" "chi" "xi" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]
+
+# variables with even character across the x0min boundary (used for applying dissipation)
+even_vars_x0min := [ "phi1" "phi2" "pi1" "pi2" "A_t" "Atilde_p" "Atilde_phi" "A_z" "B_t" "Btilde_p" "Btilde_phi" "B_z" "chi" "xi" ]
+
+# variables to smooth via Kreiss-Oliger dissipation before taking a time step
+tn_diss_vars := [ "pi1" "pi2" "B_t" "Btilde_p" "Btilde_phi" "B_z" "xi" ]
+
+# variables to smooth via Kreiss-Oliger dissipation after regridding
+rg_diss_vars := [ "pi1" "pi2" "B_t" "Btilde_p" "Btilde_phi" "B_z" "xi" ]

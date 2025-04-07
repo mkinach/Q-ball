@@ -1,0 +1,16 @@
+# multigrid-specific fixed parameters
+
+# variables which have evolution equations
+hyperbolic_vars := [ "modphi" "phi1" "phi2" "pi1" "pi2" "A_t" "Atilde_p" "Atilde_phi" "A_z" "B_t" "Btilde_p" "Btilde_phi" "B_z" "gaugecond" "divE" "divB" "Eden" "Eem" "Qden" "elec_p" "elec_phi" "elec_z" "mag_p""mag_phi" "mag_z" "chi" "xi" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" "dummy" "phi1ire" "phi2ire" "atire" "apire" "azire" ]
+
+# variables defined in both AMR and MG hierarchies
+elliptic_vars := ["V"]
+
+# variables that will be restricted to coarser levels in the MG hierarchy via half-weight restriction
+mg_hw_restr := [ "V" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]
+
+# variables which need to have their ghost regions synchronized after every smoothing sweep
+mg_sync := [ "V" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]
+
+# variables that will have linearly-interpolated coarse grid corrections applied during the V-cycle
+mg_interp2 := [ "V" "dRdp" "dRdp2" "dXdz" "dXdz2" "pR" "zX" ]

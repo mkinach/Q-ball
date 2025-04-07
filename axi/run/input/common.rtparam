@@ -1,0 +1,44 @@
+# common runtime parameters
+
+# echo parameters to screen at runtime
+echo_params := 1
+
+# set to 1 for PAMR debugging
+pamr_trace_lev := 0
+
+# set to 0-3 for verbose output after every time step
+evo_trace := 3
+
+# number of spatial dimensions
+dim := 2
+
+# potential type
+#  1 - logarithmic
+#  2 - polynomial
+Vtype := 2
+
+# initial Q-ball position (linear coordinates)
+cR  := 0.0
+cX  := 0.0
+cR1 := 0.0
+cR2 := 0.0
+cX1 := 25.0
+cX2 := -25.0
+
+# compactified coordinate parameters
+c := 0.05
+d := 10
+
+# perturbing field parameters
+cc       := 0.1
+amp      := 0.1
+delta    := 1
+r0       := 20.0
+R_center := 0
+X_center := 2.0
+Rw       := 0.95
+Xw       := 1.05
+signum   := 1
+
+# coordinate range
+base_bbox := [0 75 -75 75]

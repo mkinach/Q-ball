@@ -1,0 +1,38 @@
+# multigrid-specific runtime parameters
+
+# toggle for multigrid mode
+mg_toggle := 1
+
+# base-level grid resolution
+base_shape := [2049 4097]
+
+# maximum depth of AMR hierarchy
+max_lev := 1
+
+# number of base-level time steps to evolve for
+steps := 1
+
+# data output frequency (uses RNPL syntax)
+save_ivec := 1-*/1
+
+# minimum grid size for the coarsest level in the MG hierarchy
+min_mg_cwidth := [5 9]
+
+# residual thresholds for determining whether MG equations are considered solved
+MG_tol := 1e-10
+MG_crtol := 1e-6
+
+# V-cycle parameters
+MG_max_iter := 50
+MG_min_iter := 3
+MG_max_citer := 100
+
+# number of sweeps on the coarse grids
+MG_pre_swp := 3
+MG_pst_swp := 3
+
+# variables to output at the frequency specified by save_ivec
+save_2_vars := [ "V" ]
+
+# tag for output files
+save_tag := "axi_MG_"
