@@ -16,7 +16,7 @@ usage() {
   echo
   echo "usage: ${SCRIPT_NAME} [-m <mode>] [-n <integer>] [-v <potential>]"
   echo
-  echo "    -m <mode>       Specify a PAMR mode to use ('mg' or 'evo' supported; default is 'mg')"
+  echo "    -m <mode>       Specify a PAMR mode to use ('mg' or 'evo' supported; default is 'evo')"
   echo "    -n <integer>    Specify the number of cores to use (integer > 0 supported; default is 1)"
   echo "    -v <potential>  Generate initial data corresponding to a specific scalar potential ('log' or 'poly' supported)"
   echo "    -h              Print this help message"

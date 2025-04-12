@@ -36,3 +36,14 @@ Assuming that the software stack is properly installed, you can build and run th
 Pass the `-h` flag to this script to list the available options. General simulation parameters can be modified by editing the files in the respective `run/input/` directories. For the axisymmetric case, some simulation parameters can also be modified in `axi/src/rnpl/init_qball.inc`. To use different gauged Q-ball initial data, you can modify the parameters in `run/input/shoot_log.mpl` and `run/input/shoot_poly.mpl`.
 
 Output will be saved in the respective `run/output/` directories as SDF (Scientific Data Format) files. This is a binary format which is designed to be visualized with XVS and DV. If you wish to convert the SDF files to a plaintext format, you can use the `sdfdump` utility which is included with the RNPL installation.
+
+## Sample Results
+
+<div>
+  <center>
+  <iframe src="https://player.vimeo.com/video/1074858134" width="640" height="360" frameborder="0" allowfullscreen></iframe>
+  <iframe src="https://player.vimeo.com/video/1074847373" width="640" height="360" frameborder="0" allowfullscreen></iframe>
+  </center>
+</div>
+
+Note that additional scripts have been used to generate the above visualizations.
