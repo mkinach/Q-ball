@@ -39,11 +39,5 @@ Output will be saved in the respective `run/output/` directories as SDF (Scienti
 
 ## Sample Results
 
-<div>
-  <center>
-  <iframe src="https://player.vimeo.com/video/1074858134" width="640" height="360" frameborder="0" allowfullscreen></iframe>
-  <iframe src="https://player.vimeo.com/video/1074847373" width="640" height="360" frameborder="0" allowfullscreen></iframe>
-  </center>
-</div>
-
-Note that additional scripts have been used to generate the above visualizations.
+* Video: [Relativistic Collisions of Gauged Q-balls](https://vimeo.com/1074858134)
+* Video: [Dynamical Stability of Gauged Q-balls](https://vimeo.com/1074847373)
