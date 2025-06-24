@@ -10,6 +10,11 @@ This repository contains the source code for an adaptive solver of the gauged Q-
 
 > M. P. Kinach and M. W. Choptuik, [*Dynamical Evolution of U(1) Gauged Q-balls in Axisymmetry*](https://doi.org/10.1103/PhysRevD.107.035022), Phys. Rev. D **107**, 035022 (2023), [arXiv:2210.11198](https://doi.org/10.48550/arXiv.2211.11198) [hep-th].
 
+## Sample Results
+
+* Video: [Relativistic Collisions of Gauged Q-balls](https://vimeo.com/1074858134)
+* Video: [Dynamical Stability of Gauged Q-balls](https://vimeo.com/1074847373)
+
 ## Requirements
 
 At a minimum, this software requires a Unix-based operating system with the following software stack:
@@ -36,8 +41,3 @@ Assuming that the software stack is properly installed, you can build and run th
 Pass the `-h` flag to this script to list the available options. General simulation parameters can be modified by editing the files in the respective `run/input/` directories. For the axisymmetric case, some simulation parameters can also be modified in `axi/src/rnpl/init_qball.inc`. To use different gauged Q-ball initial data, you can modify the parameters in `run/input/shoot_log.mpl` and `run/input/shoot_poly.mpl`.
 
 Output will be saved in the respective `run/output/` directories as SDF (Scientific Data Format) files. This is a binary format which is designed to be visualized with XVS and DV. If you wish to convert the SDF files to a plaintext format, you can use the `sdfdump` utility which is included with the RNPL installation.
-
-## Sample Results
-
-* Video: [Relativistic Collisions of Gauged Q-balls](https://vimeo.com/1074858134)
-* Video: [Dynamical Stability of Gauged Q-balls](https://vimeo.com/1074847373)
